@@ -1,5 +1,5 @@
 {
-  "pluginAlias": "ExampleHomebridgePlugin",
+  "pluginAlias": "AqaraHomebridgePlugin",
   "pluginType": "platform",
   "singular": true,
   "schema": {
