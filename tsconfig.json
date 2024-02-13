@@ -10,6 +10,7 @@
     ],
     "declaration": true,
     "declarationMap": true,
+    "skipLibCheck": true,
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": "./src",
