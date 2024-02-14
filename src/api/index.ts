@@ -141,4 +141,19 @@ export class AqaraApi {
     }
     return result;
   }
+
+  getResourceValue(subjectId: string, resourceIds: string[]) {
+    return this.request('query.resource.value', {
+      subjectId,
+      resourceIds,
+    });
+  }
+
+  setResourceValue(subjectId: string, resources: Array<{ resourceId: string; value: string }>) {
+    return this.request('write.resource.device', {
+      subjectId,
+      resources,
+    });
+  }
+
 }

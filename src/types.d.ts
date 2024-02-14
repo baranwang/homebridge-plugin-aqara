@@ -1,3 +1,9 @@
+type AqaraPlatformAccessory = import('homebridge').PlatformAccessory<AqaraPlatformAccessoryContext>;
+
+interface AqaraPlatformAccessoryContext {
+  deviceInfo: Aqara.DeviceInfo;
+}
+
 declare namespace Aqara {
   interface AppConfig {
     appId: string;
@@ -41,16 +47,13 @@ declare namespace Aqara {
     createTime: number;
     /** 更新时间 */
     updateTime: number;
-    /** 设备信息列表 */
-    subInfos: any[];
-    /** 设备数量 */
-    totalCount: number;
     /** 设备名称 */
     deviceName: string;
   }
 
   interface QueryDeviceInfoResponse {
     data: DeviceInfo[];
+    /** 设备数量 */
     totalCount: number;
   }
 }
