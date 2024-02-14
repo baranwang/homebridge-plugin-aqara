@@ -8,7 +8,10 @@
   },
   "dependencies": {
     "@homebridge/plugin-ui-utils": "^1.0.1",
+    "ahooks": "^3.7.10",
+    "rc-field-form": "^1.41.0",
     "react": "^18.2.0",
+    "react-bootstrap": "^2.10.1",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
