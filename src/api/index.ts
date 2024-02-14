@@ -1,8 +1,11 @@
 import axios, { AxiosInstance } from 'axios';
 import { createHash } from 'crypto';
+import { Logger } from 'homebridge/lib/logger';
+import fs from 'fs';
 
 export interface AqaraApiOption extends Aqara.AppConfig {
   region: 'cn' | 'us' | 'kr' | 'ru' | 'eu' | 'sg';
+  accountConfigPath?: string;
 }
 
 const API_DOMAIN = {
@@ -17,6 +20,26 @@ const API_DOMAIN = {
 export class AqaraApi {
   axios!: AxiosInstance;
 
+  logger = new Logger('AqaraApi');
+
+  get accountConfig() {
+    const { accountConfigPath } = this.option;
+    if (!accountConfigPath) {
+      return null;
+    }
+    const accountConfigStr = fs.readFileSync(accountConfigPath, 'utf-8');
+    try {
+      const accountConfig = JSON.parse(accountConfigStr);
+      return accountConfig;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  get accessToken() {
+    return this.accountConfig?.accessToken;
+  }
+
   constructor(private option: AqaraApiOption) {
     const { region, appId, keyId } = option;
     this.axios = axios.create({
@@ -26,10 +49,14 @@ export class AqaraApi {
       config.headers['Content-Type'] = 'application/json';
       config.headers['Appid'] = appId;
       config.headers['Keyid'] = keyId;
-      const { nonce, timestamp, sign } = this.sign();
+      const accessToken = !config.data.intent.startsWith('config.auth') ? this.accessToken : undefined;
+      const { nonce, timestamp, sign } = this.sign(accessToken);
       config.headers['Nonce'] = nonce;
       config.headers['Time'] = timestamp;
       config.headers['Sign'] = sign;
+      if (accessToken) {
+        config.headers['Accesstoken'] = accessToken;
+      }
       return config;
     });
     this.axios.interceptors.response.use((response) => {
@@ -60,14 +87,15 @@ export class AqaraApi {
     };
   }
 
-  private request(intent: string, data: any) {
+  private request<T>(intent: string, data: any) {
+    this.logger.info('Request:', intent, JSON.stringify(data));
     return this.axios.post('/v3.0/open/api', {
       intent,
       data,
-    });
+    }) as Promise<T>;
   }
 
-  async getAuthCode(account: string) {
+  getAuthCode(account: string) {
     return this.request('config.auth.getAuthCode', {
       account,
       accountType: 0,
@@ -75,11 +103,42 @@ export class AqaraApi {
     });
   }
 
-  async getToken(account: string, authCode: string) {
+  getToken(account: string, authCode: string) {
     return this.request('config.auth.getToken', {
       account,
       accountType: 0,
       authCode,
     });
+  }
+
+  refreshToken(refreshToken: string = this.accountConfig?.refreshToken) {
+    return this.request('config.auth.refreshToken', {
+      refreshToken,
+    });
+  }
+
+  queryDeviceInfo(params: Aqara.QueryDeviceInfoRequest) {
+    return this.request<Aqara.QueryDeviceInfoResponse>('query.device.info', params);
+  }
+
+  async getAllDevices() {
+    const pageSize = 100;
+    const result: Aqara.DeviceInfo[] = [];
+    const { data, totalCount } = await this.queryDeviceInfo({
+      pageNum: 1,
+      pageSize,
+    });
+    result.push(...data);
+    if (totalCount > pageSize) {
+      const pageCount = Math.ceil(totalCount / pageSize);
+      for (let i = 2; i <= pageCount; i++) {
+        const { data } = await this.queryDeviceInfo({
+          pageNum: i,
+          pageSize,
+        });
+        result.push(...data);
+      }
+    }
+    return result;
   }
 }
