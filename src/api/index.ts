@@ -1,11 +1,9 @@
 import axios, { AxiosInstance } from 'axios';
 import { createHash } from 'crypto';
 
-export interface AqaraApiOption {
-    region: 'cn' | 'us' | 'kr' | 'ru' | 'eu' | 'sg';
-    appId: string;
-    appKey: string;
-    keyId: string;
+
+export interface AqaraApiOption extends Aqara.AppConfig {
+  region: 'cn' | 'us' | 'kr' | 'ru' | 'eu' | 'sg';
 }
 
 const API_DOMAIN = {
@@ -37,7 +35,7 @@ export class AqaraApi {
     });
   }
 
-  sign(accessToken?: string) {
+  private sign(accessToken?: string) {
     const { appId, keyId, appKey } = this.option;
     const nonce = Math.random().toString(36).slice(2);
     const timestamp = Date.now();
@@ -53,5 +51,17 @@ export class AqaraApi {
       timestamp,
       sign,
     };
+  }
+
+  async getAuthCode() {
+    const { data } = await this.axios.post('/', {
+      "intent": "config.auth.getAuthCode",
+      "data": {
+        "account": "189000123456",
+        "accountType": 0,
+        "accessTokenValidity": "1h"
+      }
+    });
+    return data;
   }
 }

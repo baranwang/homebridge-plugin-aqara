@@ -11,7 +11,8 @@
     "lib": ["DOM", "ESNext"],
     "moduleResolution": "node",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@api/*": ["../src/api/*"],
     },
     "resolveJsonModule": true,
     "rootDir": "src",
