@@ -18,8 +18,16 @@ export class LumiAirerAcn02 extends BaseAccessory {
 
     this.services[1]
       .getCharacteristic(this.platform.Characteristic.CurrentPosition)
-      .onGet(this.getCurrentPosition.bind(this))
-      .onSet(this.setCurrentPosition.bind(this));
+      .onGet(this.getPosition.bind(this));
+
+    this.services[1]
+      .getCharacteristic(this.platform.Characteristic.TargetPosition)
+      .onGet(this.getPosition.bind(this))
+      .onSet(this.setPosition.bind(this));
+
+    this.services[1]
+      .getCharacteristic(this.platform.Characteristic.PositionState)
+      .onGet(this.getPositionState.bind(this));
   }
 
   lightbulbOn = false;
@@ -39,20 +47,19 @@ export class LumiAirerAcn02 extends BaseAccessory {
     } catch (error) {}
   }
 
-  currentPosition = 0;
+  position = 0;
 
-  async getCurrentPosition() {
+  async getPosition() {
     try {
       const { value } = await this.getResourceValue('1.1.85');
-      this.currentPosition = parseInt(value);
+      this.position = parseInt(value);
     } catch (error) {}
-    return this.currentPosition;
+    return this.position;
   }
 
-  async setCurrentPosition(value) {
+  async setPosition(value) {
     try {
       await this.setResourceValue('1.1.85', value.toString());
-      this.currentPosition = value;
     } catch (error) {}
   }
 
@@ -70,15 +77,5 @@ export class LumiAirerAcn02 extends BaseAccessory {
       this.positionState = this.positionStateMap[value];
     } catch (error) {}
     return this.positionState;
-  }
-
-  async setPositionState(value) {
-    try {
-      const [aqaraValue] = Object.entries(this.positionStateMap).find(([_, val]) => val === value) ?? [];
-      if (aqaraValue) {
-        await this.setResourceValue('14.1.85', aqaraValue);
-        this.positionState = value;
-      }
-    } catch (error) {}
   }
 }
