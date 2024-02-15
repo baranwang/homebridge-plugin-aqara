@@ -30,6 +30,9 @@ class UiServer extends HomebridgePluginUiServer {
   }
 
   getLocalToken({ account }: { account: string }) {
+    if (!this.aqaraApi) {
+      return Promise.resolve(null);
+    }
     this.aqaraApi.setAccount(account);
     const config = this.aqaraApi.accountConfig;
     if (!config) {

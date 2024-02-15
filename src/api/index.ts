@@ -131,7 +131,7 @@ export class AqaraApi {
     return this.request('config.auth.getAuthCode', {
       account,
       accountType: 0,
-      accessTokenValidity: '1h',
+      accessTokenValidity: '1y',
     });
   }
 
