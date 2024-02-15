@@ -1,5 +1,11 @@
 # homebridge-plugin-aqara
 
+## 0.0.3
+
+### Patch Changes
+
+- 5062ee0: 修复已知问题
+
 ## 0.0.2
 
 ### Patch Changes
