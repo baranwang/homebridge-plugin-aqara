@@ -74,7 +74,7 @@ export class AqaraApi {
     });
     this.axios.interceptors.response.use(
       (response) => {
-        if (response.data.code === 108 && !this.retry) {
+        if (response.data.code === 108 && response.config?.data?.intent !== 'config.auth.refreshToken' && !this.retry) {
           this.retry = true;
           return this.refreshToken()
             .then(() => this.axios(response.config))

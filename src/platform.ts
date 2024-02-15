@@ -28,7 +28,7 @@ export class AqaraHomebridgePlatform implements DynamicPlatformPlugin {
       this.api.on('didFinishLaunching', () => {
         this.tokenRefreshTimer = setInterval(() => {
           this.aqaraApi.refreshToken();
-        }, 1000 * 60 * 60 * 24 * 30);
+        }, 1000 * 60 * 60 * 24 * 7);
 
         this.discoverDevices();
       });
