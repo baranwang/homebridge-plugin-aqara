@@ -10,7 +10,7 @@ export default defineConfig({
       buildType: 'bundle',
       input: ['ui-src/server.ts'],
       outDir: baseOutDir,
-      tsconfig: 'tsconfig.ui.json',
+      tsconfig: 'ui-src/tsconfig.json',
       externals: ['@homebridge/plugin-ui-utils', '@api/index'],
       dts: false,
       hooks: [
@@ -33,7 +33,7 @@ export default defineConfig({
       outDir: path.resolve(baseOutDir, 'public'),
       autoExternal: false,
       platform: 'browser',
-      tsconfig: 'tsconfig.ui.json',
+      tsconfig: 'ui-src/tsconfig.json',
       copy: {
         patterns: [{ from: './index.html', context: __dirname }],
       },

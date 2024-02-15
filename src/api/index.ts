@@ -35,6 +35,9 @@ export class AqaraApi {
   }
 
   get accountConfig() {
+    if (!fs.existsSync(this.configPath)) {
+      return null;
+    }
     const accountConfigStr = fs.readFileSync(this.configPath, 'utf-8');
     try {
       const accountConfig = JSON.parse(accountConfigStr);
