@@ -56,4 +56,23 @@ declare namespace Aqara {
     /** 设备数量 */
     totalCount: number;
   }
+
+  interface ResourceValue {
+    /** 设备id */
+    subjectId: string;
+    /** 资源id */
+    resourceId: string;
+    /** 资源值 */
+    value: string;
+    /** 时间戳(毫秒) */
+    timeStamp: string;
+  }
+
+  interface SetResourceValueRequest {
+    subjectId: string;
+    resources: {
+      resourceId: string;
+      value: string;
+    }[];
+  }
 }

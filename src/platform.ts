@@ -1,43 +1,34 @@
-import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
+import { API, Characteristic, DynamicPlatformPlugin, Logger, PlatformConfig, Service } from 'homebridge';
 
-import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
-import { AqaraApi, AqaraApiOption } from './api';
 import path from 'path';
-import fs from 'fs';
+import { LumiAirerAcn02 } from './accessories';
+import { AqaraApi, AqaraApiOption } from './api';
+import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 
-interface AqaraPlatformConfig extends PlatformConfig, AqaraApiOption {
-  account?: string;
-}
+interface AqaraPlatformConfig extends PlatformConfig, AqaraApiOption {}
 
-/**
- * HomebridgePlatform
- * This class is the main constructor for your plugin, this is where you should
- * parse the user config and discover/register accessories with Homebridge.
- */
 export class AqaraHomebridgePlatform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
   public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
 
   public readonly aqaraApi!: AqaraApi;
 
-  // this is used to track restored cached accessories
-  public readonly accessories: PlatformAccessory[] = [];
+  public readonly accessories: AqaraPlatformAccessory[] = [];
 
   private tokenRefreshTimer?: NodeJS.Timeout;
 
-  constructor(public readonly log: Logger, public readonly config: PlatformConfig, public readonly api: API) {
+  constructor(public readonly log: Logger, public readonly config: AqaraPlatformConfig, public readonly api: API) {
     this.log.debug('Finished initializing platform:', this.config.name);
-    const { account } = this.config as AqaraPlatformConfig;
+    const { account } = this.config;
     if (account) {
-      const accountConfigPath = path.resolve(this.api.user.storagePath(), 'aqara', `${account}.json`);
       this.aqaraApi = new AqaraApi({
-        ...(this.config as AqaraPlatformConfig),
-        accountConfigPath,
+        ...this.config,
+        storagePath: this.api.user.storagePath(),
       });
       this.api.on('didFinishLaunching', () => {
         this.tokenRefreshTimer = setInterval(() => {
           this.aqaraApi.refreshToken();
-        }, 1000 * 60 * 60 * 24);
+        }, 1000 * 60 * 30);
 
         this.discoverDevices();
       });
@@ -52,11 +43,7 @@ export class AqaraHomebridgePlatform implements DynamicPlatformPlugin {
     }
   }
 
-  /**
-   * This function is invoked when homebridge restores cached accessories from disk at startup.
-   * It should be used to setup event handlers for characteristics and update respective values.
-   */
-  configureAccessory(accessory: PlatformAccessory) {
+  configureAccessory(accessory: AqaraPlatformAccessory) {
     this.log.info('Loading accessory from cache:', accessory.displayName);
     this.accessories.push(accessory);
   }
@@ -68,9 +55,36 @@ export class AqaraHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
   private handleDevice(device: Aqara.DeviceInfo) {
-    // Aqara智能晾衣机 Lite
-    if (device.model === 'lumi.airer.acn02') {
-      console.log(device);
+    const AccessoryClass = this.getAccessoryClass(device);
+    if (!AccessoryClass) {
+      return;
+    }
+    const uuid = this.api.hap.uuid.generate(device.did);
+    const existingAccessory = this.accessories.find((accessory) => accessory.UUID === uuid);
+    if (existingAccessory) {
+      this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
+      existingAccessory.context = {
+        deviceInfo: device,
+      };
+      this.api.updatePlatformAccessories([existingAccessory]);
+      new AccessoryClass(this, existingAccessory);
+    } else {
+      this.log.info('Adding new accessory:', device.deviceName);
+      const accessory = new this.api.platformAccessory<AqaraPlatformAccessoryContext>(device.deviceName, uuid);
+      accessory.context = {
+        deviceInfo: device,
+      };
+      new AccessoryClass(this, accessory);
+      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+    }
+  }
+
+  private getAccessoryClass(deviceInfo: Aqara.DeviceInfo) {
+    switch (deviceInfo.model) {
+      case 'lumi.airer.acn02':
+        return LumiAirerAcn02;
+      default:
+        return undefined;
     }
   }
 }

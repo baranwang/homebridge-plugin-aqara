@@ -6,6 +6,8 @@
   "editor.rulers": [ 140 ],
   "eslint.enable": true,
   "cSpell.words": [
-    "Aqara"
-  ]
+    "Aqara",
+    "Lumi"
+  ],
+  "prettier.printWidth": 120
 }

@@ -7,5 +7,5 @@ import { AqaraHomebridgePlatform } from './platform';
  * This method registers the platform with Homebridge
  */
 export = (api: API) => {
-  api.registerPlatform(PLATFORM_NAME, AqaraHomebridgePlatform);
+  api.registerPlatform(PLATFORM_NAME, AqaraHomebridgePlatform as any);
 };

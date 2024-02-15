@@ -1,20 +1,9 @@
 import { HomebridgePluginUiServer, RequestError } from '@homebridge/plugin-ui-utils';
-// @ts-expect-error
-import { AqaraApi, AqaraApiOption } from '@api';
-import path from 'path';
-import fs from 'fs';
+// @ts-ignore
+import { AqaraApi, AqaraApiOption } from '@api/index';
 
 class UiServer extends HomebridgePluginUiServer {
   aqaraApi!: AqaraApi;
-
-  _configPath = path.resolve(this.homebridgeStoragePath ?? '', 'aqara');
-
-  get configPath() {
-    if (!fs.existsSync(this._configPath)) {
-      fs.mkdirSync(this._configPath);
-    }
-    return this._configPath;
-  }
 
   constructor() {
     super();
@@ -25,20 +14,14 @@ class UiServer extends HomebridgePluginUiServer {
   }
 
   getAuthCode(config: AqaraApiOption & { account: string }) {
-    console.log(this.homebridgeStoragePath);
     const aqaraApi = this.getAqaraApi(config);
     return aqaraApi.getAuthCode(config.account);
   }
 
-  async getToken(config: AqaraApiOption & { account: string; authCode: string }) {
+  async getToken(config: AqaraApiOption & { authCode: string }) {
     const aqaraApi = this.getAqaraApi(config);
     try {
-      const res: Aqara.GetTokenResponse = await aqaraApi.getToken(config.account, config.authCode);
-      const { expiresIn, ...rest } = res;
-      const expiresAt = Date.now() + parseInt(expiresIn) * 1000;
-      const result = { ...rest, expiresAt, account: config.account };
-      const configPath = path.resolve(this.configPath, `${config.account}.json`);
-      fs.writeFileSync(configPath, JSON.stringify(result, null, 2));
+      const result = await aqaraApi.getToken(config.account, config.authCode);
       return result;
     } catch (error) {
       const e = error as Error;
@@ -47,21 +30,23 @@ class UiServer extends HomebridgePluginUiServer {
   }
 
   getLocalToken({ account }: { account: string }) {
-    const configPath = path.resolve(this.configPath, `${account}.json`);
-    if (!fs.existsSync(configPath)) {
-      return null;
+    this.aqaraApi.setAccount(account);
+    const config = this.aqaraApi.accountConfig;
+    if (!config) {
+      return Promise.resolve(null);
     }
-    const configStr = fs.readFileSync(configPath, 'utf-8');
-    const config = JSON.parse(configStr);
     if (config.expiresAt < Date.now()) {
-      return null;
+      return Promise.resolve(null);
     }
-    return config;
+    return Promise.resolve(config);
   }
 
   private getAqaraApi(config: AqaraApiOption) {
     if (!this.aqaraApi) {
-      this.aqaraApi = new AqaraApi(config);
+      this.aqaraApi = new AqaraApi({
+        ...config,
+        storagePath: this.homebridgeStoragePath || '',
+      });
     }
     return this.aqaraApi;
   }
