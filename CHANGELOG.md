@@ -1,5 +1,11 @@
 # homebridge-plugin-aqara
 
+## 0.0.5
+
+### Patch Changes
+
+- 489f2de: 优化代码
+
 ## 0.0.4
 
 ### Patch Changes
