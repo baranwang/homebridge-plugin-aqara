@@ -27,11 +27,11 @@ export class AqaraApi {
 
   get configPath() {
     const { storagePath, account } = this.option;
-    const configPath = path.resolve(storagePath, 'aqara');
-    if (!fs.existsSync(configPath)) {
-      fs.mkdirSync(configPath);
+    const configDir = path.resolve(storagePath, 'aqara');
+    if (!fs.existsSync(configDir)) {
+      fs.mkdirSync(configDir);
     }
-    return path.resolve(configPath, `${account}.json`);
+    return path.resolve(configDir, `${account}.json`);
   }
 
   get accountConfig() {
@@ -48,7 +48,13 @@ export class AqaraApi {
   }
 
   get accessToken() {
-    return this.accountConfig?.accessToken;
+    if (!this.accountConfig) {
+      return undefined;
+    }
+    if (this.accountConfig.expiresAt < Date.now()) {
+      return undefined;
+    }
+    return this.accountConfig.accessToken;
   }
 
   retry = false;
@@ -115,10 +121,6 @@ export class AqaraApi {
     };
   }
 
-  setAccount(account: string) {
-    this.option.account = account;
-  }
-
   private request<T>(intent: string, data: any) {
     this.logger.info('Request:', intent, JSON.stringify(data));
     return this.axios.post('/v3.0/open/api', {
@@ -158,8 +160,7 @@ export class AqaraApi {
   private saveAccountConfig({ expiresIn, ...rest }: Aqara.GetTokenResponse) {
     const expiresAt = Date.now() + parseInt(expiresIn) * 1000;
     const result = { ...rest, expiresAt, account: this.option.account };
-    const configPath = path.resolve(this.configPath, `${this.option.account}.json`);
-    fs.writeFileSync(configPath, JSON.stringify(result, null, 2));
+    fs.writeFileSync(this.configPath, JSON.stringify(result, null, 2));
   }
 
   queryDeviceInfo(params: Aqara.QueryDeviceInfoRequest) {

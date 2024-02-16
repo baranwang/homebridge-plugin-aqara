@@ -10,42 +10,33 @@ export default () => {
   const [config, setConfig] = useState<any>({});
 
   const {
-    data: token,
+    data: accessToken,
     refresh,
     cancel,
-  } = useRequest(
-    async () => {
-      const tokenInfo = await window.homebridge.request('/token/local', { account: config.account });
-      if (tokenInfo && tokenInfo.expiresAt > Date.now()) {
-        return tokenInfo;
+  } = useRequest(() => window.homebridge.request('/token/local', config), {
+    pollingInterval: 1000 * 2,
+    ready: !!config.account,
+    refreshDeps: [config.account],
+    onSuccess: (data) => {
+      if (data) {
+        cancel();
       }
-      return null;
     },
-    {
-      pollingInterval: 1000 * 2,
-      ready: !!config.account,
-      refreshDeps: [config.account],
-      onSuccess: (data) => {
-        if (data) {
-          cancel();
-        }
-      },
-    }
-  );
+  });
 
   return (
     <ConfigContext.Provider value={{ config, setConfig }}>
-      <div hidden={step !== 0 || !!token}>
+      <div hidden={step !== 0 || !!accessToken}>
         <AppConfig onNext={() => setStep(1)} />
       </div>
-      <div hidden={step !== 1 || !!token}>
+      <div hidden={step !== 1 || !!accessToken}>
         <UserConfig onNext={() => refresh()} />
       </div>
 
-      {!!token && (
+      {!!accessToken && (
         <Form.Group className='mb-3'>
           <Form.Label>Access Token</Form.Label>
-          <Form.Control type='text' value={token.accessToken} />
+          <Form.Control type='text' value={accessToken} />
         </Form.Group>
       )}
     </ConfigContext.Provider>
