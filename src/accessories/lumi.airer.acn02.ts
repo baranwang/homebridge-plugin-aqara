@@ -28,41 +28,21 @@ export class LumiAirerAcn02 extends BaseAccessory {
       .onGet(this.getPositionState.bind(this));
   }
 
-  lightbulbOn = false;
-
   async getLightbulbOn() {
-    return this.getResourceValue('14.2.85')
-      .then(({ value }) => {
-        this.lightbulbOn = value === '1';
-        return this.lightbulbOn;
-      })
-      .catch(() => this.lightbulbOn);
+    return this.getResourceValue('14.2.85').then(({ value }) => value === '1');
   }
 
   async setLightbulbOn(value) {
-    this.setResourceValue('14.2.85', value ? '1' : '0').then(() => {
-      this.lightbulbOn = value;
-    });
+    this.setResourceValue('14.2.85', value ? '1' : '0');
   }
 
-  position = 0;
-
   async getPosition() {
-    return this.getResourceValue('1.1.85')
-      .then(({ value }) => {
-        this.position = parseInt(value);
-        return this.position;
-      })
-      .catch(() => this.position);
+    return this.getResourceValue('1.1.85').then(({ value }) => parseInt(value));
   }
 
   async setPosition(value) {
-    this.setResourceValue('1.1.85', value.toString()).then(() => {
-      this.position = value;
-    });
+    this.setResourceValue('1.1.85', value.toString());
   }
-
-  positionState = this.platform.Characteristic.PositionState.STOPPED;
 
   private positionStateMap = {
     '1': this.platform.Characteristic.PositionState.DECREASING,
@@ -71,11 +51,6 @@ export class LumiAirerAcn02 extends BaseAccessory {
   };
 
   async getPositionState() {
-    return this.getResourceValue('14.1.85')
-      .then(({ value }) => {
-        this.positionState = this.positionStateMap[value];
-        return this.positionState;
-      })
-      .catch(() => this.positionState);
+    return this.getResourceValue('14.1.85').then(({ value }) => this.positionStateMap[value]);
   }
 }
