@@ -16,9 +16,7 @@ export class LumiAirerAcn02 extends BaseAccessory {
       .onGet(this.getLightbulbOn.bind(this))
       .onSet(this.setLightbulbOn.bind(this));
 
-    this.services[1]
-      .getCharacteristic(this.platform.Characteristic.CurrentPosition)
-      .onGet(this.getPosition.bind(this));
+    this.services[1].getCharacteristic(this.platform.Characteristic.CurrentPosition).onGet(this.getPosition.bind(this));
 
     this.services[1]
       .getCharacteristic(this.platform.Characteristic.TargetPosition)
@@ -33,34 +31,35 @@ export class LumiAirerAcn02 extends BaseAccessory {
   lightbulbOn = false;
 
   async getLightbulbOn() {
-    try {
-      const { value } = await this.getResourceValue('14.2.85');
-      this.lightbulbOn = value === '1';
-    } catch (error) {}
-    return this.lightbulbOn;
+    return this.getResourceValue('14.2.85')
+      .then(({ value }) => {
+        this.lightbulbOn = value === '1';
+        return this.lightbulbOn;
+      })
+      .catch(() => this.lightbulbOn);
   }
 
   async setLightbulbOn(value) {
-    try {
-      await this.setResourceValue('14.2.85', value ? '1' : '0');
+    this.setResourceValue('14.2.85', value ? '1' : '0').then(() => {
       this.lightbulbOn = value;
-    } catch (error) {}
+    });
   }
 
   position = 0;
 
   async getPosition() {
-    try {
-      const { value } = await this.getResourceValue('1.1.85');
-      this.position = parseInt(value);
-    } catch (error) {}
-    return this.position;
+    return this.getResourceValue('1.1.85')
+      .then(({ value }) => {
+        this.position = parseInt(value);
+        return this.position;
+      })
+      .catch(() => this.position);
   }
 
   async setPosition(value) {
-    try {
-      await this.setResourceValue('1.1.85', value.toString());
-    } catch (error) {}
+    this.setResourceValue('1.1.85', value.toString()).then(() => {
+      this.position = value;
+    });
   }
 
   positionState = this.platform.Characteristic.PositionState.STOPPED;
@@ -72,10 +71,11 @@ export class LumiAirerAcn02 extends BaseAccessory {
   };
 
   async getPositionState() {
-    try {
-      const { value } = await this.getResourceValue('14.1.85');
-      this.positionState = this.positionStateMap[value];
-    } catch (error) {}
-    return this.positionState;
+    return this.getResourceValue('14.1.85')
+      .then(({ value }) => {
+        this.positionState = this.positionStateMap[value];
+        return this.positionState;
+      })
+      .catch(() => this.positionState);
   }
 }

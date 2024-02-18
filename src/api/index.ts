@@ -3,22 +3,14 @@ import { createHash } from 'crypto';
 import path from 'path';
 import fs from 'fs';
 import { Logger } from 'homebridge/lib/logger';
-import { BatchRequester } from './batch-requester';
+import { BatchRequestManager } from 'batch-request-manager';
+import { API_DOMAIN } from './constants';
 
 export interface AqaraApiOption extends Aqara.AppConfig {
   region: 'cn' | 'us' | 'kr' | 'ru' | 'eu' | 'sg';
   account: string;
   storagePath: string;
 }
-
-const API_DOMAIN = {
-  cn: 'open-cn.aqara.com',
-  us: 'open-usa.aqara.com',
-  kr: 'open-kr.aqara.com',
-  ru: 'open-ru.aqara.com',
-  eu: 'open-ger.aqara.com',
-  sg: 'open-sg.aqara.com',
-};
 
 export class AqaraApi {
   axios!: AxiosInstance;
@@ -192,7 +184,7 @@ export class AqaraApi {
     }
   }
 
-  getResourceRequester = new BatchRequester<
+  getResourceBrm = new BatchRequestManager<
     { subjectId: string; resourceIds: string[] }[],
     { subjectId: string; resourceId: string },
     Aqara.ResourceValue[]
@@ -214,10 +206,10 @@ export class AqaraApi {
   );
 
   getResourceValue(subjectId: string, resourceId: string) {
-    return this.getResourceRequester.request({ subjectId, resourceId });
+    return this.getResourceBrm.request({ subjectId, resourceId });
   }
 
-  setResourceRequester = new BatchRequester<
+  setResourceBrm = new BatchRequestManager<
     Aqara.SetResourceValueRequest[],
     { subjectId: string; resourceId: string; value: string },
     void
@@ -237,6 +229,6 @@ export class AqaraApi {
   );
 
   setResourceValue(subjectId: string, resourceId: string, value: string) {
-    return this.setResourceRequester.request({ subjectId, resourceId, value });
+    return this.setResourceBrm.request({ subjectId, resourceId, value });
   }
 }
