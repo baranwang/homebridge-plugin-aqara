@@ -1,5 +1,11 @@
 # homebridge-plugin-aqara
 
+## 0.0.7
+
+### Patch Changes
+
+- 3d89e60: 精简代码
+
 ## 0.0.6
 
 ### Patch Changes
