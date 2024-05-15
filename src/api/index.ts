@@ -5,6 +5,7 @@ import fs from 'fs';
 import { Logger } from 'homebridge/lib/logger';
 import { BatchRequestManager } from 'batch-request-manager';
 import { API_DOMAIN } from './constants';
+import { inspect } from 'util';
 
 export interface AqaraApiOption extends Aqara.AppConfig {
   region: 'cn' | 'us' | 'kr' | 'ru' | 'eu' | 'sg';
@@ -113,8 +114,8 @@ export class AqaraApi {
     };
   }
 
-  private request<T>(intent: string, data: any) {
-    this.logger.info('Request:', intent, JSON.stringify(data));
+  request<T>(intent: string, data: any) {
+    this.logger.info('Request:', intent, inspect(data, true, Infinity));
     return this.axios.post('/v3.0/open/api', {
       intent,
       data,
@@ -159,13 +160,14 @@ export class AqaraApi {
     return this.request<Aqara.QueryDeviceInfoResponse>('query.device.info', params);
   }
 
-  async getAllDevices() {
+  async getAllDevices(positionId?: string) {
     try {
       const pageSize = 100;
       const result: Aqara.DeviceInfo[] = [];
       const { data, totalCount } = await this.queryDeviceInfo({
         pageNum: 1,
         pageSize,
+        positionId,
       });
       result.push(...data);
       if (totalCount > pageSize) {
@@ -174,6 +176,7 @@ export class AqaraApi {
           const { data } = await this.queryDeviceInfo({
             pageNum: i,
             pageSize,
+            positionId,
           });
           result.push(...data);
         }
@@ -230,5 +233,13 @@ export class AqaraApi {
 
   setResourceValue(subjectId: string, resourceId: string, value: string) {
     return this.setResourceBrm.request({ subjectId, resourceId, value });
+  }
+
+  queryIrInfo(did: string) {
+    return this.request<Aqara.QueryIrInfoResponse>('query.ir.info', { did });
+  }
+
+  queryIrKeys(did: string) {
+    return this.request<Aqara.QueryIrKeysResponse>('query.ir.keys', { did });
   }
 }

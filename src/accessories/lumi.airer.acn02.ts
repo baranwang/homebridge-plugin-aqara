@@ -1,29 +1,28 @@
 import { BaseAccessory } from './base';
 
 export class LumiAirerAcn02 extends BaseAccessory {
-  constructor(platform, accessory) {
-    super(platform, accessory);
-
-    this.init();
-  }
-
   init() {
     const { Lightbulb, WindowCovering } = this.platform.Service;
-    this.generateServices([Lightbulb, WindowCovering]);
+    this.generateServices({
+      lightbulb: Lightbulb,
+      airer: WindowCovering,
+    });
 
-    this.services[0]
+    this.services.lightbulb
       .getCharacteristic(this.platform.Characteristic.On)
       .onGet(this.getLightbulbOn.bind(this))
       .onSet(this.setLightbulbOn.bind(this));
 
-    this.services[1].getCharacteristic(this.platform.Characteristic.CurrentPosition).onGet(this.getPosition.bind(this));
+    this.services.airer
+      .getCharacteristic(this.platform.Characteristic.CurrentPosition)
+      .onGet(this.getPosition.bind(this));
 
-    this.services[1]
+    this.services.airer
       .getCharacteristic(this.platform.Characteristic.TargetPosition)
       .onGet(this.getPosition.bind(this))
       .onSet(this.setPosition.bind(this));
 
-    this.services[1]
+    this.services.airer
       .getCharacteristic(this.platform.Characteristic.PositionState)
       .onGet(this.getPositionState.bind(this));
   }

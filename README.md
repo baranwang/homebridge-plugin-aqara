@@ -4,4 +4,6 @@
 
 目前支持的设备有：
 
-- [x] Aqara 智能晾衣机 Lite
+- [x] Aqara 智能晾衣机Lite
+- [x] Aqara 智能晾衣机H1（Aqara 的 API 暂不支持控制行程的百分比）
+- [x] 红外模拟电视遥控器

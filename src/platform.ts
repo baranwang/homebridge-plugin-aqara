@@ -1,11 +1,12 @@
 import { API, Characteristic, DynamicPlatformPlugin, Logger, PlatformConfig, Service } from 'homebridge';
 
-import path from 'path';
-import { LumiAirerAcn02 } from './accessories';
+import { LumiAirerAcn001, LumiAirerAcn02, VirtualIrTv } from './accessories';
 import { AqaraApi, AqaraApiOption } from './api';
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 
-interface AqaraPlatformConfig extends PlatformConfig, AqaraApiOption {}
+interface AqaraPlatformConfig extends PlatformConfig, AqaraApiOption {
+  positionId?: string;
+}
 
 export class AqaraHomebridgePlatform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
@@ -49,7 +50,10 @@ export class AqaraHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
   discoverDevices() {
-    this.aqaraApi.getAllDevices().then((devices) => {
+    // this.aqaraApi.request('query.ir.info', { did: 'ir.1235995976809168896' }).then(console.log);
+    // this.aqaraApi.request('query.ir.keys', { did: 'ir.1235995976809168896' }).then(console.log);
+    this.aqaraApi.getAllDevices(this.config.positionId).then((devices) => {
+      console.log('devices', devices);
       devices.forEach((device) => this.handleDevice(device));
     });
   }
@@ -81,8 +85,12 @@ export class AqaraHomebridgePlatform implements DynamicPlatformPlugin {
 
   private getAccessoryClass(deviceInfo: Aqara.DeviceInfo) {
     switch (deviceInfo.model) {
+      case 'lumi.airer.acn001':
+        return LumiAirerAcn001;
       case 'lumi.airer.acn02':
         return LumiAirerAcn02;
+      case 'virtual.ir.tv':
+        return VirtualIrTv;
       default:
         return undefined;
     }

@@ -1,8 +1,14 @@
 import type { Service } from 'homebridge';
 import type { AqaraHomebridgePlatform } from '../platform';
 
+type GenerateServicesParams =
+  | typeof Service
+  | {
+      service: typeof Service;
+      subName: string;
+    };
 export class BaseAccessory {
-  public services: Service[] = [];
+  public services: Record<string, Service> = {};
 
   constructor(readonly platform: AqaraHomebridgePlatform, readonly accessory: AqaraPlatformAccessory) {
     const { deviceInfo } = this.accessory.context;
@@ -12,12 +18,22 @@ export class BaseAccessory {
       .setCharacteristic(Characteristic.Manufacturer, 'Aqara')
       .setCharacteristic(Characteristic.Model, deviceInfo.model)
       .setCharacteristic(Characteristic.SerialNumber, deviceInfo.did.split('.').pop()!.toUpperCase());
+    this.init();
   }
 
-  protected generateServices<T extends typeof Service>(services: T[]) {
-    this.services = services.map(
-      (service) => this.accessory.getService(service as any) || this.accessory.addService(service as any),
-    );
+  protected generateServices(services: Record<string, GenerateServicesParams>) {
+    this.services = Object.entries(services).reduce<Record<string, Service>>((acc, [key, params]) => {
+      const existingService = this.accessory.getService(key);
+      if (existingService) {
+        acc[key] = existingService;
+      } else if ('subName' in params) {
+        const { subName, service } = params;
+        acc[key] = this.accessory.addService(service, `${this.accessory.displayName} - ${subName}`, key);
+      } else {
+        acc[key] = this.accessory.addService(params, this.accessory.displayName, key);
+      }
+      return acc;
+    }, {});
   }
 
   protected getResourceValue(resourceId: string) {
@@ -37,5 +53,9 @@ export class BaseAccessory {
     } catch (error) {
       return Promise.reject(error);
     }
+  }
+
+  init() {
+    // 暴露给子类
   }
 }

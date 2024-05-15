@@ -75,4 +75,25 @@ declare namespace Aqara {
       value: string;
     }[];
   }
+
+  interface QueryIrInfoResponse {
+    brandName: string;
+    lineupId: string;
+    controllerId: number;
+    createTime: number;
+    brandId: number;
+    updateTime: number;
+    type: number;
+    did: string;
+    categoryId: number;
+  }
+
+  interface QueryIrKeysResponse {
+    keys: {
+      controllerId: number;
+      irKeyId: string;
+      keyName: string;
+      keyId: string;
+    }[];
+  }
 }
