@@ -1,5 +1,12 @@
 # homebridge-plugin-aqara
 
+## 0.1.0
+
+### Minor Changes
+
+- b81860f: 红外模拟电视遥控器
+- b81860f: 新增智能晾衣机 H1
+
 ## 0.0.7
 
 ### Patch Changes
